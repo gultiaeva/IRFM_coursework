@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link>
+    <title>Выберите год</title>
+</head>
+<body>
+<h1>Загрузка отчетов ЦБ</h1>
+    <form action="/download" method="post">
+        <label for="year">Выберите год:</label>
+        <select id="year" name="year">
+                {% for year in reports %}
+                    <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+        </select><br>
+        <input id="submit" type="submit" value="Выбор" />
+        <div id="res"></div>
+    </form>
+</body>
+</html>
+
+

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>{{ year }} report</title>
+
+    <script>
+        function updateTextInput(val) {
+          document.getElementById('sliderValue').value=val;
+        }
+    </script>
+
+    <script>
+
+        function changeVisibility() {
+            var pdf = document.getElementById("document_pdf");
+            var txt = document.getElementById("document_txt");
+            var btn = document.getElementById("switch");
+            if (pdf.style.display === "none"){
+                pdf.style.display = "block"
+                txt.style.display = "none"
+                btn.textContent = "Нажмите, чтобы отобразить TXT!"
+            } else {
+                pdf.style.display = "none"
+                txt.style.display = "block"
+                btn.textContent = "Нажмите, чтобы отобразить PDF!"
+            }
+            return false;
+        }
+    </script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script>
+        $( document ).ready(function() {
+           $("#convert").click(function(e){
+               var btn = document.getElementById("convert");
+               btn.disabled = true;
+               $.ajax({
+                   url: "/convert",
+                   type: "POST",
+                   contentType: "application/json;charset=utf-8",
+                   dataType: "*",
+                   data: "{{ year }}",
+                   success: function(data) {
+                       var btn = document.getElementById("switch");
+                       btn.disabled = false;
+                       var btn = document.getElementById("normalize");
+                       btn.disabled = false;
+                       var btn = document.getElementById("retrieve");
+                       btn.disabled = false;
+                       },
+                   error: function(xhr) {
+                       alert("Error");//Do Something to handle error
+                       btn.disabled = false;
+                       }
+               });
+           });
+        });
+    </script>
+
+    <script>
+        $( document ).ready(function() {
+           $("#normalize").click(function(e){
+               var btn = document.getElementById("normalize");
+               btn.disabled = true;
+               $.ajax({
+                   url: "/normalize",
+                   type: "POST",
+                   contentType: "application/json;charset=utf-8",
+                   dataType: "*",
+                   data: "{{ year }}",
+                   success: function(data) {
+                       var btn = document.getElementById("plot_dict_size");
+                       btn.disabled = false;
+                       var btn = document.getElementById("plot_freq");
+                       btn.disabled = false;
+                       },
+                   error: function(xhr) {
+                       alert("Error");//Do Something to handle error
+                       btn.disabled = false;
+                       }
+               });
+           });
+        });
+    </script>
+
+    <script>
+        $( document ).ready(function() {
+           $("#plot_dict_size").click(function(e){
+               var btn = document.getElementById("plot_dict_size");
+               btn.disabled = true;
+               $.ajax({
+                   url: "/draw_plot",
+                   type: "POST",
+                   contentType: "application/json;charset=utf-8",
+                   dataType: "*",
+                   data: "{{ year }}",
+                   success: function(data) {
+                       $("#plot_img").append('<img src="/static/images/dict{{ year }}.png" ' +
+                           'width="400" height="300"/>');
+                       },
+                   error: function(xhr) {
+                       alert("Error");//Do Something to handle error
+                       btn.disabled = false;
+                       }
+               });
+           });
+        });
+    </script>
+
+    <script>
+        $( document ).ready(function() {
+           $("#plot_freq").click(function(e){
+               var btn = document.getElementById("plot_freq");
+               btn.disabled = true;
+               $.ajax({
+                   url: "/draw_freq",
+                   type: "POST",
+                   contentType: "application/json;charset=utf-8",
+                   dataType: "*",
+                   data: "{{ year }}",
+                   success: function(data) {
+                       $("#freq_img").append('<img src="/static/images/freq{{ year }}.png" ' +
+                           'width="400" height="300"/>');
+                       },
+                   error: function(xhr) {
+                       alert("Error");//Do Something to handle error
+                       btn.disabled = false;
+                       }
+               });
+           });
+        });
+    </script>
+
+    <script>
+        $( document ).ready(function() {
+           $("#retrieve").click(function(e){
+               var btn = document.getElementById("retrieve");
+               btn.disabled = true;
+               let searchPattern = $("#wordSearch").val();
+               let n_pad_words = $("#n_output_value").val();
+               let exact_search = $("#exact_search").val() == "on" ? true : false
+               $("#wordResult").html("");
+               $.ajax({
+                   url: "/search",
+                   type: "POST",
+                   contentType: "application/json;charset=utf-8",
+                   dataType: "*",
+                   data: JSON.stringify({"query": searchPattern,
+                                         "year": "{{ year }}",
+                                         "metric": "levenshtein",
+                                         "n_pad": n_pad_words,
+                                         "exact_search": exact_search
+                   }),
+                   success: function(data) {
+                       if (data.success){
+                           $("#wordResult").append(`
+По запросу "${searchPattern}" найдено следующее:
+<br>
+${data.left} <span style="color: red;">${data.middle}</span> ${data.right}
+`);
+                       } else {
+                           $("#wordResult").append(`
+                           По запросу "${searchPattern}" ничего не найдено
+                           `);
+
+                       }
+                       btn.disabled = false;
+                       },
+                   error: function(xhr) {
+                       alert("Error");//Do Something to handle error
+                       btn.disabled = false;
+                       }
+               });
+           });
+        });
+    </script>
+
+</head>
+<body>
+    <div class="row">
+        <div class="column">
+            <h3>Отчет за {{ year }} г.</h3>
+<!--            Поменять вид-->
+            <button id="switch" onclick="changeVisibility();"
+                    {% if not txt_exists %}
+                    disabled
+                    {% endif %}>Нажмите, чтобы отобразить TXT!</button>
+            <br>
+
+<!--            Кнопка конвертации из PDF в TXT-->
+            <button type="button" id="convert"
+                    {% if txt_exists %}
+                    disabled
+                    {% endif %}>Конвертировать</button>
+            <br>
+
+<!--            Кнопка нормализации слов-->
+            <button type="button" id="normalize"
+                    {% if ( norm_exists and txt_exists) or not txt_exists %}
+                    disabled
+                    {% endif %}>Нормализовать</button>
+            <br>
+            <br>
+
+<!--            Кнопка построения графика числа слов от размера словаря-->
+            <button type="button" id="plot_dict_size"
+                    {% if (txt_exists and norm_exists and plot_exists)
+                       or (txt_exists and not norm_exists)
+                       or not txt_exists%}
+                    disabled
+                    {% endif %}>График зависимости кол-ва слов от размера словаря</button>
+            <div id="plot_img">
+                {% if freq_exists %}
+                <img src="/static/images/dict{{ year }}.png" width="400" height="300" />
+                {% endif %}
+            </div>
+
+<!--            Кнопка построения гистограммы самых частых слов-->
+            <button type="button" id="plot_freq"
+                    {% if (txt_exists and norm_exists and freq_exists)
+                       or (txt_exists and not norm_exists)
+                       or not txt_exists%}
+                    disabled
+                    {% endif %}>Наиболее частые слова</button>
+
+            <div id="freq_img">
+                {% if freq_exists %}
+                <img src="/static/images/freq{{ year }}.png" width="400" height="300" />
+                {% endif %}
+            </div>
+
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+
+
+<!--            Полнотекстовый поиск-->
+            <div id="full_text_search">
+                <label for="wordSearch">Введите слово или фразу для поиска по тексту:</label>
+                <input type="text" id="wordSearch">
+                <br>
+                Количество слов до и после совпадения
+                <form id="n_pad_words" name="n_pad_words">
+                    <input type="range" name="n_input_value" id="n_input_value" value="5" min="0" max="50" oninput="n_output_value.value = n_input_value.value">
+                    <output name="n_output_value" id="n_output_value">5</output>
+                </form>
+                <br>
+                <label class="switch">
+                    <input type="checkbox" id="exact_search">
+                    <span class="slider round"></span>
+                </label>
+                Точное совпадение
+                <br>
+                <br>
+                <button type="button" id ="retrieve"
+                        {% if not txt_exists %}
+                            disabled
+                        {% endif %}>Найти</button>
+                <div id="wordResult"></div>
+            </div>
+
+
+        </div>
+        <div class="column">
+        <embed id="document_pdf" src="/static/data/pdf/CBR_report{{ year }}.pdf" width="800px" height="800px" />
+        <embed id="document_txt" src="/static/data/txt/CBR_report{{ year }}.txt" width="800px" height="800px" />
+        </div>
+    </div>
+
+</body>
+</html>

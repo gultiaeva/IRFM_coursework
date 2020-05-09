@@ -130,3 +130,7 @@ dmypy.json
 
 # Pycharm shit
 .idea
+
+# Useless data
+app/static/data/*
+app/static/images/*
