@@ -3,9 +3,9 @@ from flask import jsonify
 from flask import render_template
 from flask import request
 
-from features.downloader import *
-from features.processing import *
-from features.search import file_search
+from app.features.downloader import *
+from app.features.processing import *
+from app.features.search import file_search
 
 app = Flask(__name__)
 reports = get_links()
