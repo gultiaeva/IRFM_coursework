@@ -82,7 +82,7 @@ def full_text_search(search_request, text, metric='levenshtein', n_pad_words=5, 
     accuracy = int(not exact)
     search_request = search_request.strip()
     if not search_request:
-        return None
+        return None, 0, 0
     pattern = stem_text(search_request)
     splitted = [word for word in re.findall(r'[A-ZА-ЯЁa-zа-яё0-9_]+', text)]
     text = stem_text(text)
@@ -109,7 +109,7 @@ def full_text_search(search_request, text, metric='levenshtein', n_pad_words=5, 
                 break
 
     if end_position is None:
-        return None
+        return None, 0, 0
 
     start_position = end_position - len(pattern) + 1
     start = start_position - n_pad_words
@@ -146,8 +146,8 @@ def file_search(pattern, year, metric='levenshtein', n_pad_words=5, exact=True):
     """
 
     fname = f'app/static/data/txt/CBR_report{year}.txt'
-    if not re.match(r'[a-z_а-яё0-9]', pattern.lower()):
-        return None
+    if not re.fullmatch(r'[a-z_а-яё0-9]+', pattern.lower()):
+        return None, 0, 0
     with open(fname, encoding='utf8') as f:
         data = f.read()
     result, start, end = full_text_search(pattern, data, metric, n_pad_words, exact)
