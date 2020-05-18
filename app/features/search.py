@@ -37,7 +37,7 @@ def stem_text(text):
 
     with Pool(processes=cpu_count()) as pool:
         result = pool.map(stem_word,
-                          [word for word in re.findall(r'[a-zа-яё]+',
+                          [word for word in re.findall(r'[a-zа-яё1-9_]+',
                                                        text.lower())
                            ])
     return result
@@ -85,7 +85,7 @@ def full_text_search(search_request, text, metric='levenshtein', n_pad_words=5, 
     if not search_request:
         return None
     pattern = stem_text(search_request)
-    splitted = [word for word in re.findall(r'[A-ZА-ЯЁa-zа-яё]+', text)]
+    splitted = [word for word in re.findall(r'[A-ZА-ЯЁa-zа-яё1-9_]+', text)]
     text = stem_text(text)
     end_position = None
     n = 0  # Номер слова в искомом паттерне
@@ -146,5 +146,7 @@ def file_search(pattern, year, metric='levenshtein', n_pad_words=5, exact=True):
     fname = f'app/static/data/txt/CBR_report{year}.txt'
     with open(fname, encoding='utf8') as f:
         data = f.read()
-        result = full_text_search(pattern, data, metric, n_pad_words, exact)
-        return result
+    if not re.match(r'[a-z_а-яё1-9]', pattern.lower()):
+        return None
+    result = full_text_search(pattern, data, metric, n_pad_words, exact)
+    return result
