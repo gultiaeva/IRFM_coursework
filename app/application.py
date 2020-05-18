@@ -84,15 +84,16 @@ def search():
     metric = req['metric']
     n_pad_words = int(req['n_pad'])
     exact_search = req['exact_search']
-    result = file_search(pattern, year, metric, n_pad_words, exact_search)
+    result, start, end = file_search(pattern, year, metric, n_pad_words, exact_search)
     success = result is not None
     return_json = {"success": success}
     if success:
-        left = ' '.join(result.split()[:n_pad_words])
+        left = ' '.join(result.split()[:start])
         return_json['left'] = left
-        middle = ' '.join(result.split()[n_pad_words:-n_pad_words])
+        middle = ' '.join(result.split()[start:end])
         return_json['middle'] = middle
-        right = ' '.join(result.split()[-n_pad_words:])
+        right = ' '.join(result.split()[end:])
         return_json['right'] = right
+
 
     return jsonify(return_json)
