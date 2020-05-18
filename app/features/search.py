@@ -35,11 +35,10 @@ def stem_text(text):
     :rtype: list
     """
 
-    with Pool(processes=cpu_count()) as pool:
-        result = pool.map(stem_word,
-                          [word for word in re.findall(r'[a-zа-яё1-9_]+',
-                                                       text.lower())
-                           ])
+    result = list(map(stem_word,
+                      [word for word in re.findall(r'[a-zа-яё0-9_]+',
+                                                   text.lower())
+                       ]))
     return result
 
 
@@ -85,7 +84,7 @@ def full_text_search(search_request, text, metric='levenshtein', n_pad_words=5, 
     if not search_request:
         return None
     pattern = stem_text(search_request)
-    splitted = [word for word in re.findall(r'[A-ZА-ЯЁa-zа-яё1-9_]+', text)]
+    splitted = [word for word in re.findall(r'[A-ZА-ЯЁa-zа-яё0-9_]+', text)]
     text = stem_text(text)
     end_position = None
     n = 0  # Номер слова в искомом паттерне
@@ -120,7 +119,10 @@ def full_text_search(search_request, text, metric='levenshtein', n_pad_words=5, 
     if end > len(text):
         end = len(text)
     result = ' '.join(splitted[start:end+1])
-    return result
+
+    pattern_start_in_result = start_position - start
+    pattern_end_in_result = pattern_start_in_result + len(pattern)
+    return result, pattern_start_in_result, pattern_end_in_result
 
 
 def file_search(pattern, year, metric='levenshtein', n_pad_words=5, exact=True):
@@ -144,9 +146,10 @@ def file_search(pattern, year, metric='levenshtein', n_pad_words=5, exact=True):
     """
 
     fname = f'app/static/data/txt/CBR_report{year}.txt'
+    if not re.match(r'[a-z_а-яё0-9]', pattern.lower()):
+        return None
     with open(fname, encoding='utf8') as f:
         data = f.read()
-    if not re.match(r'[a-z_а-яё1-9]', pattern.lower()):
-        return None
-    result = full_text_search(pattern, data, metric, n_pad_words, exact)
-    return result
+    result, start, end = full_text_search(pattern, data, metric, n_pad_words, exact)
+    return result, start, end
+
