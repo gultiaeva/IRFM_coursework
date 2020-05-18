@@ -5,10 +5,13 @@ from functools import lru_cache
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 
+import matplotlib
 import matplotlib.pyplot as plt
 import pymorphy2
 import seaborn as sns
 from nltk.corpus import stopwords
+
+matplotlib.use('agg')
 
 stop_words = stopwords.words('russian')
 morph = pymorphy2.MorphAnalyzer()
@@ -147,3 +150,6 @@ def plot_dict_size(year):
     fname = f'app/static/images/dict{year}.png'
     fig.savefig(fname, dpi=300)
     return fname
+
+if __name__ == "__main__":
+    plot_dict_size(2019)
