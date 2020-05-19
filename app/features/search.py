@@ -146,7 +146,7 @@ def file_search(pattern, year, metric='levenshtein', n_pad_words=5, exact=True):
     """
 
     fname = f'app/static/data/txt/CBR_report{year}.txt'
-    if not re.fullmatch(r'[a-z_а-яё0-9]+', pattern.lower()):
+    if not re.fullmatch(r'[a-z_а-яё0-9 ]+', pattern.lower()):
         return None, 0, 0
     with open(fname, encoding='utf8') as f:
         data = f.read()
