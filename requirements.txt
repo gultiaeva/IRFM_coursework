@@ -45,7 +45,7 @@ sortedcontainers==2.1.0
 soupsieve==2.0
 tqdm==4.45.0
 typed-ast==1.4.1
-urllib3==1.25.8
+urllib3==1.26.5
 vine==1.3.0
 Werkzeug==1.0.1
 wrapt==1.11.2
